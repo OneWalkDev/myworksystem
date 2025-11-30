@@ -9,11 +9,11 @@ class CasePriorityRepository
 {
     public function getById(int $id): ?CasePriority
     {
-        return CasePriority::find("id", $id);
+        return CasePriority::find($id);
     }
 
     public function getAll(): Collection
     {
-        return CasePriority::all();
+        return CasePriority::active()->ordered()->get();
     }
 }

@@ -20,6 +20,11 @@ class ClientCaseService
         return $this->repository->getByUserId($userId);
     }
 
+    public function getUserCasesPaginated(int $userId, int $perPage, array $filters): array
+    {
+        return $this->repository->getPaginatedByUserId($userId, $perPage, $filters);
+    }
+
     public function getCaseById(int $id): ?ClientCase
     {
         return $this->repository->findById($id);

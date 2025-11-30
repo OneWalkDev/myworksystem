@@ -15,12 +15,12 @@ class CaseStatusService
         $this->repository = $repository;
     }
 
-    public function getCasePriorityById(int $id): ?CaseStatus
+    public function getCaseStatusById(int $id): ?CaseStatus
     {
         return $this->repository->getById($id);
     }
 
-    public function getCasePriorityAll(): Collection
+    public function getCaseStatusAll(): Collection
     {
         return $this->repository->getAll();
     }

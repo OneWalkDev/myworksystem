@@ -15,12 +15,12 @@ class PaymentTypeService
         $this->repository = $repository;
     }
 
-    public function getCasePriorityById(int $id): ?PaymentType
+    public function getPaymentTypeById(int $id): ?PaymentType
     {
         return $this->repository->getById($id);
     }
 
-    public function getCasePriorityAll(): Collection
+    public function getPaymentTypeAll(): Collection
     {
         return $this->repository->getAll();
     }

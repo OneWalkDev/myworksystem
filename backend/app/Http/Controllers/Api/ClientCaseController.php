@@ -19,11 +19,22 @@ class ClientCaseController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $cases = $this->service->getUserCases($user->id);
 
-        return response()->json([
-            'cases' => $cases,
-        ]);
+        // ページネーションとフィルタリングのパラメータ
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+        $filters = [
+            'name' => $request->input('name'),
+            'client_name' => $request->input('client_name'),
+            'status_id' => $request->input('status_id'),
+            'priority_id' => $request->input('priority_id'),
+            'start_date_from' => $request->input('start_date_from'),
+            'start_date_to' => $request->input('start_date_to'),
+        ];
+
+        $result = $this->service->getUserCasesPaginated($user->id, $perPage, $filters);
+
+        return response()->json($result);
     }
 
     public function show(int $id): JsonResponse
