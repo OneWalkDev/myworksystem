@@ -1,0 +1,138 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\ClientCaseService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class ClientCaseController extends Controller
+{
+    protected ClientCaseService $service;
+
+    public function __construct(ClientCaseService $service)
+    {
+        $this->service = $service;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $cases = $this->service->getUserCases($user->id);
+
+        return response()->json([
+            'cases' => $cases,
+        ]);
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        $case = $this->service->getCaseById($id);
+
+        if (!$case) {
+            return response()->json([
+                'message' => 'Case not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'case' => $case,
+        ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'client_name' => 'nullable|string|max:255',
+            'client_email' => 'nullable|email|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_company' => 'nullable|string|max:255',
+            'budget' => 'nullable|numeric',
+            'actual_amount' => 'nullable|numeric',
+            'payment_type_id' => 'nullable|exists:payment_types,id',
+            'hourly_rate' => 'nullable|numeric',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'actual_start_date' => 'nullable|date',
+            'actual_end_date' => 'nullable|date',
+            'status_id' => 'nullable|exists:case_statuses,id',
+            'priority_id' => 'nullable|exists:case_priorities,id',
+            'tech_stack' => 'nullable|array',
+            'tags' => 'nullable|array',
+            'notes' => 'nullable|string',
+            'contract_file_path' => 'nullable|string',
+        ]);
+
+        $validated['user_id'] = $request->user()->id;
+        $case = $this->service->createCase($validated);
+
+        return response()->json([
+            'message' => 'Case created successfully',
+            'case' => $case,
+        ], 201);
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'client_name' => 'nullable|string|max:255',
+            'client_email' => 'nullable|email|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_company' => 'nullable|string|max:255',
+            'budget' => 'nullable|numeric',
+            'actual_amount' => 'nullable|numeric',
+            'payment_type_id' => 'nullable|exists:payment_types,id',
+            'hourly_rate' => 'nullable|numeric',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'actual_start_date' => 'nullable|date',
+            'actual_end_date' => 'nullable|date',
+            'status_id' => 'nullable|exists:case_statuses,id',
+            'priority_id' => 'nullable|exists:case_priorities,id',
+            'tech_stack' => 'nullable|array',
+            'tags' => 'nullable|array',
+            'notes' => 'nullable|string',
+            'contract_file_path' => 'nullable|string',
+        ]);
+
+        $success = $this->service->updateCase($id, $validated);
+
+        if (!$success) {
+            return response()->json([
+                'message' => 'Case not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Case updated successfully',
+        ]);
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $success = $this->service->deleteCase($id);
+
+        if (!$success) {
+            return response()->json([
+                'message' => 'Case not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Case deleted successfully',
+        ]);
+    }
+
+    public function statistics(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $stats = $this->service->getUserStatistics($user->id);
+
+        return response()->json($stats);
+    }
+}
