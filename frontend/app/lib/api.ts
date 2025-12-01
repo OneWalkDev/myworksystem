@@ -159,9 +159,12 @@ export const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(
+      // エラーオブジェクトにレスポンスデータを含める
+      const err: any = new Error(
         error.message || `Failed to create case: ${response.statusText}`
       );
+      err.response = error;
+      throw err;
     }
     return response.json();
   },
@@ -178,10 +181,31 @@ export const api = {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(
-        error.message || `Failed to create case: ${response.statusText}`
+      // エラーオブジェクトにレスポンスデータを含める
+      const err: any = new Error(
+        error.message || `Failed to update case: ${response.statusText}`
       );
+      err.response = error;
+      throw err;
     }
     return response.json();
   },
+
+  async deleteCase(token: string, id:number){
+    const response = await fetch(`${API_BASE_URL}/cases/${id}`,{
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    if(!response.ok){
+      const error = await response.json();
+      throw new Error(
+        error.message || `Failed to delete case: ${response.statusText}`
+      );
+    }
+    return response.json();
+  }
 };

@@ -18,6 +18,9 @@ export default function CaseNewPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string[]>
+  >({});
   const id = params.id;
   const numericId = Number(id);
   const isValidId = !isNaN(numericId);
@@ -43,6 +46,7 @@ export default function CaseNewPage() {
   const handleEdit = async (formData: FormData) => {
     setIsLoading(true);
     setError(null);
+    setValidationErrors({});
 
     try {
       const token = localStorage.getItem("token");
@@ -110,12 +114,43 @@ export default function CaseNewPage() {
       // 成功トースト表示
       toast.success("案件を編集しました");
 
+      // 最新のデータを再取得してフォームを更新
+      await fetchCase(token, numericId);
+      
       // 成功したら案件一覧ページへリダイレクト
       router.push("/cases");
-    } catch (err) {
-      console.error("Case creation error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "案件の登録に失敗しました";
+    } catch (err: any) {
+      console.error("Case update error:", err);
+
+      let errorMessage = "案件の更新に失敗しました";
+
+      // エラーレスポンスからバリデーションエラーを抽出
+      if (err.response && err.response.errors) {
+        setValidationErrors(err.response.errors);
+        errorMessage =
+          "入力内容に誤りがあります。赤く表示されたフィールドを確認してください。";
+      } else if (err instanceof Error) {
+        const message = err.message;
+
+        // エラーの種類に応じて適切なメッセージを表示
+        if (message.includes("バリデーション")) {
+          errorMessage = "入力内容に誤りがあります。確認してください。";
+        } else if (message.includes("認証")) {
+          errorMessage = "セッションが切れました。再度ログインしてください。";
+        } else if (message.includes("データベース") || message.includes("SQL")) {
+          errorMessage = "データの保存に失敗しました。入力内容を確認してください。";
+        } else if (message.includes("Failed to")) {
+          errorMessage = "サーバーとの通信に失敗しました。";
+        } else if (message.includes("見つかりません")) {
+          errorMessage = "案件が見つかりません。";
+        } else {
+          // SQLエラーやスタックトレースを含まない場合のみメッセージを使用
+          if (!message.includes("SQLSTATE") && !message.includes("at ")) {
+            errorMessage = message;
+          }
+        }
+      }
+
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -142,7 +177,12 @@ export default function CaseNewPage() {
           </div>
         )}
 
-        <CaseForm onSubmit={handleEdit} isLoading={isLoading} initialData={clientCase}></CaseForm>
+        <CaseForm
+          onSubmit={handleEdit}
+          isLoading={isLoading}
+          initialData={clientCase}
+          errors={validationErrors}
+        />
       </main>
     </div>
   );

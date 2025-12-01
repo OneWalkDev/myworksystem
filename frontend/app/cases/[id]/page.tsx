@@ -7,10 +7,15 @@ import { AppHeader } from "@/app/components/layout/AppHeader";
 import { api } from "@/app/lib/api";
 import type { ClientCase } from "@/app/types";
 import Link from "next/link";
+import toast from "react-hot-toast";
+import { useConfirm } from "@/app/hooks/useConfirm";
+import { ConfirmDialog } from "@/app/components/common/ConfirmDialog";
 
 export default function CaseShowPage() {
   const params = useParams();
   const router = useRouter();
+  const { isOpen, options, confirm, handleConfirm, handleCancel } =
+    useConfirm();
   const { logout } = useAuth();
 
   const [clientCase, setClientCase] = useState<ClientCase | undefined>(
@@ -25,7 +30,6 @@ export default function CaseShowPage() {
 
   useEffect(() => {
     if (!isValidId) return;
-
     const token = localStorage.getItem("token");
     if (token) {
       fetchCase(token, numericId);
@@ -49,6 +53,37 @@ export default function CaseShowPage() {
     }).format(amount);
   };
 
+  const handleDelete = async () => {
+    setIsLoading(true);
+    const result = await confirm({
+      title: "削除します。本当によろしいですか？",
+      message: "この案件を削除するともとに戻すことはできません。",
+      confirmText: "はい",
+      cancelText: "いいえ",
+      variant: "danger",
+    });
+
+    if (result) {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("認証トークンが見つかりません");
+        }
+        api.deleteCase(token, numericId);
+
+        router.push("/cases");
+        toast.success("削除しました。");
+      } catch (err) {
+        console.error("Case creation error:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "案件の削除に失敗しました";
+        toast.error(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const formatDate = (date?: string | null) => {
     if (!date) return "-";
     return new Date(date).toLocaleDateString("ja-JP");
@@ -69,6 +104,22 @@ export default function CaseShowPage() {
             案件詳細
           </h1>
           <div className="flex justify-end">
+            <button
+              onClick={handleDelete}
+              className="rounded-md bg-red-600 px-4 py-2 me-5 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              削除する
+            </button>
+            <ConfirmDialog
+              isOpen={isOpen}
+              title={options.title}
+              message={options.message}
+              confirmText={options.confirmText}
+              cancelText={options.cancelText}
+              variant={options.variant}
+              onConfirm={handleConfirm}
+              onCancel={handleCancel}
+            />
             <Link
               href={`/cases/${id}/edit`}
               className="rounded-md bg-blue-600 px-4 py-2 me-5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"

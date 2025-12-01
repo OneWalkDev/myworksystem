@@ -11,10 +11,14 @@ export default function CaseNewPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string[]>
+  >({});
 
   const handleCreate = async (formData: FormData) => {
     setIsLoading(true);
     setError(null);
+    setValidationErrors({});
 
     try {
       const token = localStorage.getItem("token");
@@ -84,9 +88,36 @@ export default function CaseNewPage() {
 
       // 成功したら案件一覧ページへリダイレクト
       router.push("/cases");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Case creation error:", err);
-      const errorMessage = err instanceof Error ? err.message : "案件の登録に失敗しました";
+
+      let errorMessage = "案件の登録に失敗しました";
+
+      // エラーレスポンスからバリデーションエラーを抽出
+      if (err.response && err.response.errors) {
+        setValidationErrors(err.response.errors);
+        errorMessage = "入力内容に誤りがあります。赤く表示されたフィールドを確認してください。";
+      } else if (err instanceof Error) {
+        // エラーメッセージからSQLやスタックトレースを除外
+        const message = err.message;
+
+        // バリデーションエラーのメッセージを抽出
+        if (message.includes("バリデーション")) {
+          errorMessage = "入力内容に誤りがあります。確認してください。";
+        } else if (message.includes("認証")) {
+          errorMessage = "セッションが切れました。再度ログインしてください。";
+        } else if (message.includes("データベース") || message.includes("SQL")) {
+          errorMessage = "データの保存に失敗しました。入力内容を確認してください。";
+        } else if (message.includes("Failed to")) {
+          errorMessage = "サーバーとの通信に失敗しました。";
+        } else {
+          // SQLエラーやスタックトレースを含まない場合のみメッセージを使用
+          if (!message.includes("SQLSTATE") && !message.includes("at ")) {
+            errorMessage = message;
+          }
+        }
+      }
+
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -113,7 +144,11 @@ export default function CaseNewPage() {
           </div>
         )}
 
-        <CaseForm onSubmit={handleCreate} isLoading={isLoading}></CaseForm>
+        <CaseForm
+          onSubmit={handleCreate}
+          isLoading={isLoading}
+          errors={validationErrors}
+        />
       </main>
     </div>
   );

@@ -13,6 +13,7 @@ interface CaseFormProps {
   initialData?: ClientCase;
   onSubmit: (data: FormData) => void;
   isLoading?: boolean;
+  errors?: Record<string, string[]>;
 }
 
 // 型を再エクスポート（他のファイルから使いやすくするため）
@@ -22,6 +23,7 @@ export function CaseForm({
   initialData,
   onSubmit,
   isLoading = false,
+  errors = {},
 }: CaseFormProps) {
   const [priorities, setPriorities] = useState<CasePriority[]>([]);
   const [statuses, setStatuses] = useState<CaseStatus[]>([]);
@@ -30,15 +32,40 @@ export function CaseForm({
   // フォームの選択値を管理
   const [selectedStatusId, setSelectedStatusId] = useState<string>("");
   const [selectedPriorityId, setSelectedPriorityId] = useState<string>("");
-  const [selectedPaymentTypeId, setSelectedPaymentTypeId] = useState<string>("");
+  const [selectedPaymentTypeId, setSelectedPaymentTypeId] =
+    useState<string>("");
 
   // 日付をYYYY-MM-DD形式に変換するヘルパー関数
-  const formatDateForInput = (dateString: string | null | undefined): string => {
+  const formatDateForInput = (
+    dateString: string | null | undefined
+  ): string => {
     if (!dateString) return "";
     // すでにYYYY-MM-DD形式の場合はそのまま返す
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
     // YYYY-MM-DD HH:MM:SS形式の場合は日付部分のみ抽出
     return dateString.split("T")[0] || "";
+  };
+
+  // フィールドにエラーがあるかチェック
+  const hasError = (fieldName: string): boolean => {
+    return errors && errors[fieldName] && errors[fieldName].length > 0;
+  };
+
+  // エラーメッセージを取得
+  const getErrorMessage = (fieldName: string): string => {
+    if (!hasError(fieldName)) return "";
+    return errors[fieldName][0];
+  };
+
+  // エラー時のinputクラス名を取得
+  const getInputClassName = (
+    baseClassName: string,
+    fieldName: string
+  ): string => {
+    if (hasError(fieldName)) {
+      return `${baseClassName} border-red-500 focus:border-red-500 focus:ring-red-500`;
+    }
+    return baseClassName;
   };
 
   // initialDataが変更されたら選択値を更新
@@ -66,9 +93,30 @@ export function CaseForm({
         api.getPaymentType(token),
       ]);
 
-      console.log("Priority data:", priorityData, "Type:", typeof priorityData, "Is Array:", Array.isArray(priorityData));
-      console.log("Status data:", statusData, "Type:", typeof statusData, "Is Array:", Array.isArray(statusData));
-      console.log("Payment data:", paymentData, "Type:", typeof paymentData, "Is Array:", Array.isArray(paymentData));
+      console.log(
+        "Priority data:",
+        priorityData,
+        "Type:",
+        typeof priorityData,
+        "Is Array:",
+        Array.isArray(priorityData)
+      );
+      console.log(
+        "Status data:",
+        statusData,
+        "Type:",
+        typeof statusData,
+        "Is Array:",
+        Array.isArray(statusData)
+      );
+      console.log(
+        "Payment data:",
+        paymentData,
+        "Type:",
+        typeof paymentData,
+        "Is Array:",
+        Array.isArray(paymentData)
+      );
 
       // データが配列かどうか確認して設定
       setPriorities(Array.isArray(priorityData) ? priorityData : []);
@@ -104,9 +152,17 @@ export function CaseForm({
               name="name"
               defaultValue={initialData?.name}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+              className={getInputClassName(
+                "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm",
+                "name"
+              )}
               placeholder="例: Webサイトリニューアル"
             />
+            {hasError("name") && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {getErrorMessage("name")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -180,9 +236,17 @@ export function CaseForm({
               id="client_email"
               name="client_email"
               defaultValue={initialData?.client_email || ""}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+              className={getInputClassName(
+                "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm",
+                "client_email"
+              )}
               placeholder="client@example.com"
             />
+            {hasError("client_email") && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {getErrorMessage("client_email")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -248,6 +312,11 @@ export function CaseForm({
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
               placeholder="1000000"
             />
+            {hasError("budget") && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {getErrorMessage("budget")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -265,6 +334,11 @@ export function CaseForm({
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
               placeholder="5000"
             />
+            {hasError("hourly_rate") && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {getErrorMessage("hourly_rate")}
+              </p>
+            )}
           </div>
 
           <div>
@@ -282,6 +356,11 @@ export function CaseForm({
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
               placeholder="950000"
             />
+            {hasError("actual_amount") && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {getErrorMessage("actual_amount")}
+              </p>
+            )}
           </div>
         </div>
       </div>

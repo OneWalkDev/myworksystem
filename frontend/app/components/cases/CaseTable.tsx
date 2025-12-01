@@ -257,11 +257,11 @@ export function CaseTable({
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5">
-                      {caseItem.status_id || "-"}
+                      {caseItem.status?.name || "-"}
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {caseItem.priority_id || "-"}
+                    {caseItem.priority?.name || "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
                     {formatCurrency(caseItem.budget)}
