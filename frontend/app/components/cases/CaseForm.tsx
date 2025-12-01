@@ -2,43 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/app/lib/api";
-
-interface MasterData {
-  id: number;
-  name: string;
-  display_order: number;
-  color?: string;
-  description?: string;
-  is_active: boolean;
-}
-
-export interface ClientCase {
-  id: number;
-  user_id: number;
-  name: string;
-  description?: string | null;
-  client_name?: string | null;
-  client_email?: string | null;
-  client_phone?: string | null;
-  client_company?: string | null;
-  budget?: number | null;
-  actual_amount?: number | null;
-  payment_type_id?: number | null;
-  hourly_rate?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  actual_start_date?: string | null;
-  actual_end_date?: string | null;
-  status_id?: number | null;
-  priority_id?: number | null;
-  tech_stack?: string[] | null;
-  tags?: string[] | null;
-  notes?: string | null;
-  contract_file_path?: string | null;
-  deleted_at?: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import type {
+  ClientCase,
+  CaseStatus,
+  CasePriority,
+  PaymentType,
+} from "@/app/types";
 
 interface CaseFormProps {
   initialData?: ClientCase;
@@ -46,14 +15,40 @@ interface CaseFormProps {
   isLoading?: boolean;
 }
 
+// 型を再エクスポート（他のファイルから使いやすくするため）
+export type { ClientCase };
+
 export function CaseForm({
   initialData,
   onSubmit,
   isLoading = false,
 }: CaseFormProps) {
-  const [priorities, setPriorities] = useState<MasterData[]>([]);
-  const [statuses, setStatuses] = useState<MasterData[]>([]);
-  const [paymentTypes, setPaymentTypes] = useState<MasterData[]>([]);
+  const [priorities, setPriorities] = useState<CasePriority[]>([]);
+  const [statuses, setStatuses] = useState<CaseStatus[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
+
+  // フォームの選択値を管理
+  const [selectedStatusId, setSelectedStatusId] = useState<string>("");
+  const [selectedPriorityId, setSelectedPriorityId] = useState<string>("");
+  const [selectedPaymentTypeId, setSelectedPaymentTypeId] = useState<string>("");
+
+  // 日付をYYYY-MM-DD形式に変換するヘルパー関数
+  const formatDateForInput = (dateString: string | null | undefined): string => {
+    if (!dateString) return "";
+    // すでにYYYY-MM-DD形式の場合はそのまま返す
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    // YYYY-MM-DD HH:MM:SS形式の場合は日付部分のみ抽出
+    return dateString.split("T")[0] || "";
+  };
+
+  // initialDataが変更されたら選択値を更新
+  useEffect(() => {
+    if (initialData) {
+      setSelectedStatusId(initialData.status_id?.toString() || "");
+      setSelectedPriorityId(initialData.priority_id?.toString() || "");
+      setSelectedPaymentTypeId(initialData.payment_type_id?.toString() || "");
+    }
+  }, [initialData]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -225,7 +220,8 @@ export function CaseForm({
             <select
               id="payment_type_id"
               name="payment_type_id"
-              defaultValue={initialData?.payment_type_id || ""}
+              value={selectedPaymentTypeId}
+              onChange={(e) => setSelectedPaymentTypeId(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             >
               <option value="">選択してください</option>
@@ -307,7 +303,7 @@ export function CaseForm({
               type="date"
               id="start_date"
               name="start_date"
-              defaultValue={initialData?.start_date || ""}
+              defaultValue={formatDateForInput(initialData?.start_date)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
           </div>
@@ -323,7 +319,7 @@ export function CaseForm({
               type="date"
               id="end_date"
               name="end_date"
-              defaultValue={initialData?.end_date || ""}
+              defaultValue={formatDateForInput(initialData?.end_date)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
           </div>
@@ -339,7 +335,7 @@ export function CaseForm({
               type="date"
               id="actual_start_date"
               name="actual_start_date"
-              defaultValue={initialData?.actual_start_date || ""}
+              defaultValue={formatDateForInput(initialData?.actual_start_date)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
           </div>
@@ -355,7 +351,7 @@ export function CaseForm({
               type="date"
               id="actual_end_date"
               name="actual_end_date"
-              defaultValue={initialData?.actual_end_date || ""}
+              defaultValue={formatDateForInput(initialData?.actual_end_date)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             />
           </div>
@@ -378,7 +374,8 @@ export function CaseForm({
             <select
               id="status_id"
               name="status_id"
-              defaultValue={initialData?.status_id || ""}
+              value={selectedStatusId}
+              onChange={(e) => setSelectedStatusId(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             >
               <option value="">選択してください</option>
@@ -400,7 +397,8 @@ export function CaseForm({
             <select
               id="priority_id"
               name="priority_id"
-              defaultValue={initialData?.priority_id || ""}
+              value={selectedPriorityId}
+              onChange={(e) => setSelectedPriorityId(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
             >
               <option value="">選択してください</option>

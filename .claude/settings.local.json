@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install --save-dev @types/flatpickr)"
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

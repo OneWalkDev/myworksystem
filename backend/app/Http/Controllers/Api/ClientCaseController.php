@@ -20,9 +20,8 @@ class ClientCaseController extends Controller
     {
         $user = $request->user();
 
-        // ページネーションとフィルタリングのパラメータ
-        $perPage = $request->input('per_page', 10);
-        $page = $request->input('page', 1);
+        // クエリパラメータを取得
+        $perPage = (int) $request->input('per_page', 10);
         $filters = [
             'name' => $request->input('name'),
             'client_name' => $request->input('client_name'),

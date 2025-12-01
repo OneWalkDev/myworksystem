@@ -15,8 +15,7 @@ export function AppHeader({ title, onLogout }: AppHeaderProps) {
 
   const navItems = [
     { name: "ダッシュボード", href: "/dashboard" },
-    { name: "案件一覧", href: "/cases" },
-    { name: "新規案件", href: "/cases/new" },
+    { name: "案件一覧", href: "/cases" }
   ];
 
   const isActive = (href: string) => {
@@ -61,9 +60,11 @@ export function AppHeader({ title, onLogout }: AppHeaderProps) {
                   />
                 </svg>
               </button>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                フリーランス管理
-              </h1>
+              <Link href="/dashboard">
+                <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  フリーランス管理
+                </h1>
+              </Link>
             </div>
             <button
               onClick={onLogout}

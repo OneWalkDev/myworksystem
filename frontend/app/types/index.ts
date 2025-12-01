@@ -1,12 +1,5 @@
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+// マスターデータ型
+export type { CaseStatus, CasePriority, PaymentType } from "./master";
 
-export interface CaseStatistics {
-  total: number;
-  by_status: Record<string, number>;
-  in_progress: number;
-  completed: number;
-}
+// 案件型
+export type { ClientCase, ClientCaseInput } from "./case";

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ClientCase } from "./CaseForm";
+import { useState, useCallback } from "react";
+import type { ClientCase } from "@/app/types";
 import Link from "next/link";
 
 interface MasterData {
@@ -20,6 +20,7 @@ interface CaseTableProps {
   onFilterChange: (filters: FilterValues) => void;
   statuses: MasterData[];
   priorities: MasterData[];
+  filters: FilterValues;
 }
 
 export interface FilterValues {
@@ -41,17 +42,26 @@ export function CaseTable({
   onFilterChange,
   statuses,
   priorities,
+  filters,
 }: CaseTableProps) {
-  const [filters, setFilters] = useState<FilterValues>({});
+  const [localFilters, setLocalFilters] = useState<FilterValues>(filters);
 
-  const handleFilterChange = (key: keyof FilterValues, value: string) => {
+  const handleFilterChange = useCallback((key: keyof FilterValues, value: string) => {
+    let processedValue: string | number | undefined = value || undefined;
+
+    // status_idとpriority_idは数値に変換
+    if ((key === "status_id" || key === "priority_id") && value) {
+      processedValue = parseInt(value);
+    }
+
     const newFilters = {
       ...filters,
-      [key]: value || undefined,
+      [key]: processedValue,
     };
-    setFilters(newFilters);
+
+    setLocalFilters(newFilters);
     onFilterChange(newFilters);
-  };
+  }, [filters, onFilterChange]);
 
   const formatCurrency = (amount?: number | null) => {
     if (!amount) return "-";
@@ -80,8 +90,17 @@ export function CaseTable({
             </label>
             <input
               type="text"
-              value={filters.name || ""}
-              onChange={(e) => handleFilterChange("name", e.target.value)}
+              value={localFilters.name || ""}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setLocalFilters({ ...localFilters, name: newValue });
+              }}
+              onBlur={(e) => handleFilterChange("name", e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleFilterChange("name", e.currentTarget.value);
+                }
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="案件名で検索"
             />
@@ -93,10 +112,17 @@ export function CaseTable({
             </label>
             <input
               type="text"
-              value={filters.client_name || ""}
-              onChange={(e) =>
-                handleFilterChange("client_name", e.target.value)
-              }
+              value={localFilters.client_name || ""}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setLocalFilters({ ...localFilters, client_name: newValue });
+              }}
+              onBlur={(e) => handleFilterChange("client_name", e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleFilterChange("client_name", e.currentTarget.value);
+                }
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="クライアント名で検索"
             />
@@ -107,8 +133,11 @@ export function CaseTable({
               ステータス
             </label>
             <select
-              value={filters.status_id || ""}
-              onChange={(e) => handleFilterChange("status_id", e.target.value)}
+              value={localFilters.status_id || ""}
+              onChange={(e) => {
+                setLocalFilters({ ...localFilters, status_id: e.target.value ? parseInt(e.target.value) : undefined });
+                handleFilterChange("status_id", e.target.value);
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">すべて</option>
@@ -125,10 +154,11 @@ export function CaseTable({
               優先度
             </label>
             <select
-              value={filters.priority_id || ""}
-              onChange={(e) =>
-                handleFilterChange("priority_id", e.target.value)
-              }
+              value={localFilters.priority_id || ""}
+              onChange={(e) => {
+                setLocalFilters({ ...localFilters, priority_id: e.target.value ? parseInt(e.target.value) : undefined });
+                handleFilterChange("priority_id", e.target.value);
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">すべて</option>
@@ -146,10 +176,11 @@ export function CaseTable({
             </label>
             <input
               type="date"
-              value={filters.start_date_from || ""}
-              onChange={(e) =>
-                handleFilterChange("start_date_from", e.target.value)
-              }
+              value={localFilters.start_date_from || ""}
+              onChange={(e) => {
+                setLocalFilters({ ...localFilters, start_date_from: e.target.value });
+                handleFilterChange("start_date_from", e.target.value);
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
@@ -160,10 +191,11 @@ export function CaseTable({
             </label>
             <input
               type="date"
-              value={filters.start_date_to || ""}
-              onChange={(e) =>
-                handleFilterChange("start_date_to", e.target.value)
-              }
+              value={localFilters.start_date_to || ""}
+              onChange={(e) => {
+                setLocalFilters({ ...localFilters, start_date_to: e.target.value });
+                handleFilterChange("start_date_to", e.target.value);
+              }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>

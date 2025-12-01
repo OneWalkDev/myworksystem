@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { AppHeader } from "@/app/components/layout/AppHeader";
 import { CaseTable, FilterValues } from "@/app/components/cases/CaseTable";
-import { ClientCase } from "@/app/components/cases/CaseForm";
+import type { ClientCase } from "@/app/types";
 import { api } from "@/app/lib/api";
 import Link from "next/link";
 
@@ -24,12 +24,19 @@ export default function CasesPage() {
   const [total, setTotal] = useState(0);
   const [perPage, setPerPage] = useState(10);
   const [filters, setFilters] = useState<FilterValues>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       fetchMasterData(token);
+    }
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
       fetchCases(token, currentPage, filters);
     }
   }, [currentPage, filters]);
@@ -54,23 +61,46 @@ export default function CasesPage() {
     filters: FilterValues
   ) => {
     try {
-      setIsLoading(true);
+      setIsFetching(true);
       const response = await api.getCases(token, {
         page,
         per_page: perPage,
         ...filters,
       });
 
-      setCases(response.data || []);
-      setCurrentPage(response.current_page || 1);
-      setLastPage(response.last_page || 1);
-      setTotal(response.total || 0);
-      setPerPage(response.per_page || 10);
+      console.log("API Response:", response);
+
+      // レスポンスの構造を確認してデータを設定
+      if (Array.isArray(response)) {
+        // レスポンスが配列の場合（ページネーションなし）
+        setCases(response);
+        setCurrentPage(1);
+        setLastPage(1);
+        setTotal(response.length);
+        setPerPage(response.length);
+      } else if (response.data) {
+        // ページネーション付きレスポンス
+        setCases(response.data || []);
+        setCurrentPage(response.current_page || 1);
+        setLastPage(response.last_page || 1);
+        setTotal(response.total || 0);
+        setPerPage(response.per_page || 10);
+      } else {
+        // その他の場合は空配列
+        setCases([]);
+        setCurrentPage(1);
+        setLastPage(1);
+        setTotal(0);
+      }
     } catch (error) {
       console.error("Cases fetch error:", error);
       setCases([]);
+      setCurrentPage(1);
+      setLastPage(1);
+      setTotal(0);
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -100,24 +130,34 @@ export default function CasesPage() {
           </Link>
         </div>
 
-        {isLoading ? (
+        {isInitialLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-500 dark:text-gray-400">
               読み込み中...
             </div>
           </div>
         ) : (
-          <CaseTable
-            cases={cases}
-            currentPage={currentPage}
-            lastPage={lastPage}
-            total={total}
-            perPage={perPage}
-            onPageChange={handlePageChange}
-            onFilterChange={handleFilterChange}
-            statuses={statuses}
-            priorities={priorities}
-          />
+          <div className="relative">
+            {isFetching && (
+              <div className="absolute top-0 left-0 right-0 z-10 flex justify-center">
+                <div className="rounded-b-lg bg-blue-500 px-4 py-2 text-sm text-white shadow-lg">
+                  検索中...
+                </div>
+              </div>
+            )}
+            <CaseTable
+              cases={cases}
+              currentPage={currentPage}
+              lastPage={lastPage}
+              total={total}
+              perPage={perPage}
+              onPageChange={handlePageChange}
+              onFilterChange={handleFilterChange}
+              statuses={statuses}
+              priorities={priorities}
+              filters={filters}
+            />
+          </div>
         )}
       </main>
     </div>
