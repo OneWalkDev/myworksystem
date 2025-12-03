@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ClientCaseController;
 use App\Http\Controllers\Api\Master\CasePriorityController;
 use App\Http\Controllers\Api\Master\CaseStatusController;
 use App\Http\Controllers\Api\Master\PaymentTypeController;
+use App\Http\Controllers\Api\SaleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -61,4 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cases/status', [CaseStatusController::class, 'index']);
     Route::get('/cases/payment-type', [PaymentTypeController::class, 'index']);
     Route::apiResource('cases', ClientCaseController::class);
+
+    // 売上管理
+    Route::apiResource('sales', SaleController::class);
 });

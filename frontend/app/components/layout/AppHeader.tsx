@@ -2,23 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AppHeaderProps {
-  title: string;
   onLogout: () => void;
 }
 
-export function AppHeader({ title, onLogout }: AppHeaderProps) {
+export function AppHeader({ onLogout }: AppHeaderProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { name: "ダッシュボード", href: "/dashboard" },
-    { name: "案件一覧", href: "/cases" }
+    { name: "案件一覧", href: "/cases" },
+    { name: "売上一覧", href: "/sales"}
   ];
 
   const isActive = (href: string) => {
+    if (!mounted) return false;
     if (href === "/cases") {
       return pathname === "/cases";
     }

@@ -1,52 +1,40 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ClientCase, CaseStatus, CasePriority } from "@/app/types";
+import { Sales } from "@/app/types/sale";
 import Link from "next/link";
 
-interface CaseTableProps {
-  cases: ClientCase[];
+interface SaleTableProps{
+  sales: Sales[];
   currentPage: number;
   lastPage: number;
   total: number;
   perPage: number;
   onPageChange: (page: number) => void;
   onFilterChange: (filters: FilterValues) => void;
-  statuses: CaseStatus[];
-  priorities: CasePriority[];
   filters: FilterValues;
-}
+};
 
 export interface FilterValues {
   name?: string;
-  client_name?: string;
-  status_id?: number;
-  priority_id?: number;
-  start_date_from?: string;
-  start_date_to?: string;
+  sale_date_from?: string;
+  sale_date_to?: string;
 }
 
-export function CaseTable({
-  cases,
+export function SaleTable({
+  sales,
   currentPage,
   lastPage,
   total,
   perPage,
   onPageChange,
   onFilterChange,
-  statuses,
-  priorities,
   filters,
-}: CaseTableProps) {
+}: SaleTableProps) {
   const [localFilters, setLocalFilters] = useState<FilterValues>(filters);
 
   const handleFilterChange = useCallback((key: keyof FilterValues, value: string) => {
     let processedValue: string | number | undefined = value || undefined;
-
-    // status_idとpriority_idは数値に変換
-    if ((key === "status_id" || key === "priority_id") && value) {
-      processedValue = parseInt(value);
-    }
 
     const newFilters = {
       ...filters,
@@ -102,78 +90,14 @@ export function CaseTable({
 
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              クライアント名
-            </label>
-            <input
-              type="text"
-              value={localFilters.client_name || ""}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setLocalFilters({ ...localFilters, client_name: newValue });
-              }}
-              onBlur={(e) => handleFilterChange("client_name", e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleFilterChange("client_name", e.currentTarget.value);
-                }
-              }}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              placeholder="クライアント名で検索"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              ステータス
-            </label>
-            <select
-              value={localFilters.status_id || ""}
-              onChange={(e) => {
-                setLocalFilters({ ...localFilters, status_id: e.target.value ? parseInt(e.target.value) : undefined });
-                handleFilterChange("status_id", e.target.value);
-              }}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">すべて</option>
-              {statuses.map((status) => (
-                <option key={status.id} value={status.id}>
-                  {status.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              優先度
-            </label>
-            <select
-              value={localFilters.priority_id || ""}
-              onChange={(e) => {
-                setLocalFilters({ ...localFilters, priority_id: e.target.value ? parseInt(e.target.value) : undefined });
-                handleFilterChange("priority_id", e.target.value);
-              }}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">すべて</option>
-              {priorities.map((priority) => (
-                <option key={priority.id} value={priority.id}>
-                  {priority.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              開始日（From）
+              売上日（From）
             </label>
             <input
               type="date"
-              value={localFilters.start_date_from || ""}
+              value={localFilters.sale_date_from || ""}
               onChange={(e) => {
-                setLocalFilters({ ...localFilters, start_date_from: e.target.value });
-                handleFilterChange("start_date_from", e.target.value);
+                setLocalFilters({ ...localFilters, sale_date_from: e.target.value });
+                handleFilterChange("sale_date_from", e.target.value);
               }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
@@ -181,14 +105,14 @@ export function CaseTable({
 
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-              開始日（To）
+              売上日（To）
             </label>
             <input
               type="date"
-              value={localFilters.start_date_to || ""}
+              value={localFilters.sale_date_to || ""}
               onChange={(e) => {
-                setLocalFilters({ ...localFilters, start_date_to: e.target.value });
-                handleFilterChange("start_date_to", e.target.value);
+                setLocalFilters({ ...localFilters, sale_date_to: e.target.value });
+                handleFilterChange("sale_date_to", e.target.value);
               }}
               className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
@@ -205,22 +129,16 @@ export function CaseTable({
                 案件名
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                クライアント
+                税込金額
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                ステータス
+                売上日
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                優先度
+                支払期日
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                予算
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                開始日
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                終了日
+                入金
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                 操作
@@ -228,47 +146,39 @@ export function CaseTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-            {cases.length === 0 ? (
+            {sales.length === 0 ? (
               <tr>
                 <td
                   colSpan={8}
                   className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
-                  案件が見つかりませんでした
+                  売上が見つかりませんでした
                 </td>
               </tr>
             ) : (
-              cases.map((caseItem) => (
+              sales.map((saleItem) => (
                 <tr
-                  key={caseItem.id}
+                  key={saleItem.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                    {caseItem.name}
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                    {saleItem.client_case?.name || "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {caseItem.client_name || "-"}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
-                    <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5">
-                      {caseItem.status?.name || "-"}
-                    </span>
+                    {formatCurrency(saleItem.total_amount)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {caseItem.priority?.name || "-"}
+                    {formatDate(saleItem.sale_date)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {formatCurrency(caseItem.budget)}
+                    {formatDate(saleItem.payment_due_date)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {formatDate(caseItem.start_date)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {formatDate(caseItem.end_date)}
+                    {formatDate(saleItem.payment_due_date)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     <Link
-                      href={`/cases/${caseItem.id}`}
+                      href={`/sales/${saleItem.id}`}
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       詳細

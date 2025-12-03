@@ -37,7 +37,7 @@ export default function CaseNewPage() {
   const fetchCase = async (token: string, id: number) => {
     try {
       const response = await api.getCase(token, id);
-      setClientCase(response.case);
+      setClientCase(response);
     } finally {
       setIsLoading(false);
     }
@@ -109,14 +109,14 @@ export default function CaseNewPage() {
       if (notes) data.notes = notes;
 
       // API呼び出し
-      await api.editCase(token, data, numericId);
+      await api.editCase(token, numericId, data);
 
       // 成功トースト表示
       toast.success("案件を編集しました");
 
       // 最新のデータを再取得してフォームを更新
       await fetchCase(token, numericId);
-      
+
       // 成功したら案件一覧ページへリダイレクト
       router.push("/cases");
     } catch (err: any) {
@@ -137,8 +137,12 @@ export default function CaseNewPage() {
           errorMessage = "入力内容に誤りがあります。確認してください。";
         } else if (message.includes("認証")) {
           errorMessage = "セッションが切れました。再度ログインしてください。";
-        } else if (message.includes("データベース") || message.includes("SQL")) {
-          errorMessage = "データの保存に失敗しました。入力内容を確認してください。";
+        } else if (
+          message.includes("データベース") ||
+          message.includes("SQL")
+        ) {
+          errorMessage =
+            "データの保存に失敗しました。入力内容を確認してください。";
         } else if (message.includes("Failed to")) {
           errorMessage = "サーバーとの通信に失敗しました。";
         } else if (message.includes("見つかりません")) {
@@ -160,7 +164,7 @@ export default function CaseNewPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AppHeader title="案件登録" onLogout={logout} />
+      <AppHeader onLogout={logout} />
 
       {/* メインコンテンツ */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

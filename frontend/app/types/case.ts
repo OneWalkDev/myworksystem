@@ -59,3 +59,12 @@ export interface ClientCaseInput {
   notes?: string;
   contract_file_path?: string;
 }
+
+// ページネーション付きレスポンス
+export interface PaginatedCasesResponse {
+  data: ClientCase[];
+  current_page: number;
+  last_page: number;
+  total: number;
+  per_page: number;
+}

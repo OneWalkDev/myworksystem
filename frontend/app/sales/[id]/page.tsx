@@ -4,21 +4,21 @@ import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import { AppHeader } from "@/app/components/layout/AppHeader";
-import { api } from "@/app/lib/api";
-import type { ClientCase } from "@/app/types";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useConfirm } from "@/app/hooks/useConfirm";
 import { ConfirmDialog } from "@/app/components/common/ConfirmDialog";
+import { Sales } from "@/app/types/sale";
+import { salesApi } from "@/app/lib/api";
 
-export default function CaseShowPage() {
+export default function SaleShowPage() {
   const params = useParams();
   const router = useRouter();
   const { isOpen, options, confirm, handleConfirm, handleCancel } =
     useConfirm();
   const { logout } = useAuth();
 
-  const [clientCase, setClientCase] = useState<ClientCase | undefined>(
+  const [sale, setSale] = useState<Sales | undefined>(
     undefined
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -32,14 +32,14 @@ export default function CaseShowPage() {
     if (!isValidId) return;
     const token = localStorage.getItem("token");
     if (token) {
-      fetchCase(token, numericId);
+      fetchSale(token, numericId);
     }
   }, [numericId, isValidId]);
 
-  const fetchCase = async (token: string, id: number) => {
+  const fetchSale = async (token: string, id: number) => {
     try {
-      const response = await api.getCase(token, id);
-      setClientCase(response);
+      const response = await salesApi.getSale(token, id);
+      setSale(response);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +57,7 @@ export default function CaseShowPage() {
     setIsLoading(true);
     const result = await confirm({
       title: "削除します。本当によろしいですか？",
-      message: "この案件を削除するともとに戻すことはできません。",
+      message: "この売上を削除するともとに戻すことはできません。",
       confirmText: "はい",
       cancelText: "いいえ",
       variant: "danger",
@@ -69,14 +69,14 @@ export default function CaseShowPage() {
         if (!token) {
           throw new Error("認証トークンが見つかりません");
         }
-        api.deleteCase(token, numericId);
+        salesApi.deleteSale(token, numericId);
 
-        router.push("/cases");
+        router.push("/sales");
         toast.success("削除しました。");
       } catch (err) {
-        console.error("Case creation error:", err);
+        console.error("Sale creation error:", err);
         const errorMessage =
-          err instanceof Error ? err.message : "案件の削除に失敗しました";
+          err instanceof Error ? err.message : "売上の削除に失敗しました";
         toast.error(errorMessage);
       } finally {
         setIsLoading(false);
@@ -101,7 +101,7 @@ export default function CaseShowPage() {
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            案件詳細
+            売上詳細
           </h1>
           <div className="flex justify-end">
             <button
@@ -121,13 +121,13 @@ export default function CaseShowPage() {
               onCancel={handleCancel}
             />
             <Link
-              href={`/cases/${id}/edit`}
+              href={`/sales/${id}/edit`}
               className="rounded-md bg-blue-600 px-4 py-2 me-5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               編集する
             </Link>
             <Link
-              href="/cases"
+              href="/sales"
               className="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
               一覧に戻る
@@ -141,7 +141,7 @@ export default function CaseShowPage() {
               読み込み中...
             </div>
           </div>
-        ) : clientCase ? (
+        ) : sale ? (
           <div className="space-y-6">
             {/* 基本情報 */}
             <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
@@ -151,149 +151,59 @@ export default function CaseShowPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    案件名
+                    顧客名
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.name}
+                    {sale.client_case?.client_name}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    ステータス
+                    売上期間
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.status?.name || "-"}
+                    {formatDate(sale.sale_date)}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    優先度
+                    金額(税抜)
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.priority?.name || "-"}
+                    {formatCurrency(sale.amount)}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    予算
+                    税金
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatCurrency(clientCase.budget)}
+                    {formatCurrency(sale.tax_amount || 0)}
                   </p>
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    説明
+                    合計金額
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.description || "-"}
+                    {sale.total_amount || "-"}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* クライアント情報 */}
+            {/* 稼働情報 */}
             <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                クライアント情報
+                稼働情報
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    クライアント名
+                    稼働時間
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.client_name || "-"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    会社名
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.client_company || "-"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    メールアドレス
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.client_email || "-"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    電話番号
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.client_phone || "-"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 日程情報 */}
-            <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                日程情報
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    開始日（予定）
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatDate(clientCase.start_date)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    終了日（予定）
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatDate(clientCase.end_date)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    開始日（実績）
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatDate(clientCase.actual_start_date)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    終了日（実績）
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatDate(clientCase.actual_end_date)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 金額情報 */}
-            <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                金額情報
-              </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    予算
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatCurrency(clientCase.budget)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    実績金額
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatCurrency(clientCase.actual_amount)}
+                    {sale.working_hours || 0}時間
                   </p>
                 </div>
                 <div>
@@ -301,15 +211,40 @@ export default function CaseShowPage() {
                     時給
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {formatCurrency(clientCase.hourly_rate)}
+                    {sale.hourly_rate || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 支払い情報 */}
+            <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                支払い情報
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    支払期日
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {formatDate(sale.payment_due_date) || "-"}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    支払いタイプ
+                    実入金日
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {clientCase.payment_type?.name || "-"}
+                    {formatDate(sale.payment_date) || "-"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    支払済
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {sale.is_paid ? "はい" : "いいえ"}
                   </p>
                 </div>
               </div>
@@ -326,7 +261,7 @@ export default function CaseShowPage() {
                     メモ
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
-                    {clientCase.notes || "-"}
+                    {sale.notes || "-"}
                   </p>
                 </div>
               </div>
@@ -335,7 +270,7 @@ export default function CaseShowPage() {
         ) : (
           <div className="rounded-lg bg-white p-6 text-center shadow dark:bg-gray-800">
             <p className="text-gray-500 dark:text-gray-400">
-              案件が見つかりませんでした
+              売上が見つかりませんでした
             </p>
           </div>
         )}

@@ -46,9 +46,7 @@ class ClientCaseController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'case' => $case,
-        ]);
+        return response()->json($case);
     }
 
     public function store(Request $request): JsonResponse
