@@ -3,17 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCaseRequest;
+use App\Http\Requests\UpdateCaseRequest;
 use App\Services\ClientCaseService;
+use App\UseCases\Cases\StoreCaseUseCase;
+use App\UseCases\Cases\UpdateCaseUseCase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ClientCaseController extends Controller
 {
     protected ClientCaseService $service;
+    protected StoreCaseUseCase $storeCaseUseCase;
+    protected UpdateCaseUseCase $updateCaseUseCase;
 
-    public function __construct(ClientCaseService $service)
+    public function __construct(
+        ClientCaseService $service,
+        StoreCaseUseCase $storeCaseUseCase,
+        UpdateCaseUseCase $updateCaseUseCase,
+    )
     {
         $this->service = $service;
+        $this->storeCaseUseCase = $storeCaseUseCase;
+        $this->updateCaseUseCase = $updateCaseUseCase;
     }
 
     public function index(Request $request): JsonResponse
@@ -49,34 +61,12 @@ class ClientCaseController extends Controller
         return response()->json($case);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCaseRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'client_name' => 'nullable|string|max:255',
-                'client_email' => 'nullable|email|max:255',
-                'client_phone' => 'nullable|string|max:255',
-                'client_company' => 'nullable|string|max:255',
-                'budget' => 'nullable|numeric',
-                'actual_amount' => 'nullable|numeric',
-                'payment_type_id' => 'nullable|exists:payment_types,id',
-                'hourly_rate' => 'nullable|numeric',
-                'start_date' => 'nullable|date',
-                'end_date' => 'nullable|date',
-                'actual_start_date' => 'nullable|date',
-                'actual_end_date' => 'nullable|date',
-                'status_id' => 'nullable|exists:case_statuses,id',
-                'priority_id' => 'nullable|exists:case_priorities,id',
-                'tech_stack' => 'nullable|array',
-                'tags' => 'nullable|array',
-                'notes' => 'nullable|string',
-                'contract_file_path' => 'nullable|string',
-            ]);
+            $validated = $request->validated();
 
-            $validated['user_id'] = $request->user()->id;
-            $case = $this->service->createCase($validated);
+            $case = $this->storeCaseUseCase->execute($validated, $request->user()->id);
 
             return response()->json([
                 'message' => 'Case created successfully',
@@ -97,33 +87,12 @@ class ClientCaseController extends Controller
         }
     }
 
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateCaseRequest $request, int $id): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'name' => 'sometimes|required|string|max:255',
-                'description' => 'nullable|string',
-                'client_name' => 'nullable|string|max:255',
-                'client_email' => 'nullable|email|max:255',
-                'client_phone' => 'nullable|string|max:255',
-                'client_company' => 'nullable|string|max:255',
-                'budget' => 'nullable|numeric|max:99999999',
-                'actual_amount' => 'nullable|numeric|max:99999999',
-                'payment_type_id' => 'nullable|exists:payment_types,id',
-                'hourly_rate' => 'nullable|numeric|max:99999999',
-                'start_date' => 'nullable|date',
-                'end_date' => 'nullable|date',
-                'actual_start_date' => 'nullable|date',
-                'actual_end_date' => 'nullable|date',
-                'status_id' => 'nullable|exists:case_statuses,id',
-                'priority_id' => 'nullable|exists:case_priorities,id',
-                'tech_stack' => 'nullable|array',
-                'tags' => 'nullable|array',
-                'notes' => 'nullable|string',
-                'contract_file_path' => 'nullable|string',
-            ]);
+            $validated = $request->validated();
 
-            $success = $this->service->updateCase($id, $validated);
+            $success = $this->updateCaseUseCase->execute($id, $validated);
 
             if (!$success) {
                 return response()->json([
@@ -171,5 +140,13 @@ class ClientCaseController extends Controller
         $stats = $this->service->getUserStatistics($user->id);
 
         return response()->json($stats);
+    }
+
+    public function all(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $cases = $this->service->getCasesByUserId($user->id);
+
+        return response()->json($cases);
     }
 }

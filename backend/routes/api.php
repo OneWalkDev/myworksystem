@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cases/priority', [CasePriorityController::class, 'index']);
     Route::get('/cases/status', [CaseStatusController::class, 'index']);
     Route::get('/cases/payment-type', [PaymentTypeController::class, 'index']);
+    Route::get('/cases/all', [ClientCaseController::class, "all"]);
     Route::apiResource('cases', ClientCaseController::class);
 
     // 売上管理

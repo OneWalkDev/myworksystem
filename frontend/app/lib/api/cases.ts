@@ -70,6 +70,10 @@ export const casesApi = {
     return apiClient.get<PaginatedCasesResponse>(endpoint, token);
   },
 
+  async getCasesForSelect(token: string): Promise<ClientCase[]> {
+    return apiClient.get<ClientCase[]>("/cases/all", token);
+  },
+
   async getCase(token: string, id: number): Promise<ClientCase> {
     return apiClient.get<ClientCase>(`/cases/${id}`, token);
   },

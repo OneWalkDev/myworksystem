@@ -26,6 +26,7 @@ export interface SaleInput {
   case_id: number;
   sale_date: string;
   amount: number;
+  total_amount: number;
   tax_amount?: number;
   working_hours?: number;
   hourly_rate?: number;

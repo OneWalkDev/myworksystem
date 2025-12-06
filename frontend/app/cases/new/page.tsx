@@ -127,7 +127,7 @@ export default function CaseNewPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AppHeader title="案件登録" onLogout={logout} />
+      <AppHeader onLogout={logout} />
 
       {/* メインコンテンツ */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

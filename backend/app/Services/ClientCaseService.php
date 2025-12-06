@@ -49,4 +49,9 @@ class ClientCaseService
     {
         return $this->repository->getStatisticsByUserId($userId);
     }
+
+    public function getCasesByUserId(int $userId): Collection
+    {
+        return $this->repository->getCasesByUserId($userId);
+    }
 }

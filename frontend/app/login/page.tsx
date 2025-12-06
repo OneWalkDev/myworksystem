@@ -1,45 +1,58 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydrate form values so browser autofill (which runs before hydration) doesn't trigger a mismatch.
+  useEffect(() => {
+    setEmail(emailInputRef.current?.value ?? "");
+    setPassword(passwordInputRef.current?.value ?? "");
+    setIsHydrated(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
+    const formEmail = email;
+    const formPassword = password;
+
     try {
-      const response = await fetch('http://localhost:8001/api/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8001/api/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: formEmail, password: formPassword }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
         // トークンをlocalStorageに保存
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
 
         // ダッシュボードへリダイレクト
-        router.push('/dashboard');
+        router.push("/dashboard");
       } else {
-        setError(data.message || 'ログインに失敗しました');
+        setError(data.message || "ログインに失敗しました");
       }
     } catch (err) {
-      setError('サーバーに接続できませんでした');
-      console.error('Login error:', err);
+      setError("サーバーに接続できませんでした");
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -66,10 +79,14 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 メールアドレス
               </label>
               <input
+                ref={emailInputRef}
                 id="email"
                 name="email"
                 type="email"
@@ -83,10 +100,14 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 パスワード
               </label>
               <input
+                ref={passwordInputRef}
                 id="password"
                 name="password"
                 type="password"
@@ -106,7 +127,7 @@ export default function LoginPage() {
               disabled={loading}
               className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 dark:focus:ring-offset-gray-800"
             >
-              {loading ? 'ログイン中...' : 'ログイン'}
+              {loading ? "ログイン中..." : "ログイン"}
             </button>
           </div>
         </form>

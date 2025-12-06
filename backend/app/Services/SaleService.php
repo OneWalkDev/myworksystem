@@ -34,4 +34,13 @@ class SaleService
         return $this->repository->delete($id);
     }
 
+    public function createSale(array $data): Sale
+    {
+        return $this->repository->create($data);
+    }
+
+    public function updateSale(int $id, array $data): bool{
+        return $this->repository->update($id, $data);
+    }
+
 }

@@ -100,4 +100,11 @@ class ClientCaseRepository
             "completed" => $cases->where("status_id", 6)->count(),
         ];
     }
+
+    public function getCasesByUserId(int $userId): Collection
+    {
+        $cases = ClientCase::where("user_id", $userId)->get();
+
+        return $cases;
+    }
 }

@@ -65,4 +65,18 @@ class SaleRepository
         return $sale->delete();
     }
 
+    public function create(array $data): Sale
+    {
+        return Sale::create($data);
+    }
+
+    public function update(int $id, array $data): bool{
+        $sale = Sale::find($id);
+        if(!$sale){
+            return false;
+        }
+
+        return $sale->update($data);
+    }
+
 }
