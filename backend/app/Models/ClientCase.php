@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Master\CaseStatus;
 use App\Models\Master\CasePriority;
 use App\Models\Master\PaymentType;
@@ -141,6 +142,31 @@ class ClientCase extends Model
     public function paymentType(): BelongsTo
     {
         return $this->belongsTo(PaymentType::class, 'payment_type_id');
+    }
+
+    /**
+     * 関連する売上（ソフトデリート含む）
+     */
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class, 'case_id');
+    }
+
+    protected static function booted(): void
+    {
+        // 案件を削除したら関連する売上もソフトデリート
+        static::deleting(function (ClientCase $case) {
+            if ($case->isForceDeleting()) {
+                $case->sales()->withTrashed()->forceDelete();
+            } else {
+                $case->sales()->delete();
+            }
+        });
+
+        // 案件を復元したら売上も復元
+        static::restoring(function (ClientCase $case) {
+            $case->sales()->withTrashed()->restore();
+        });
     }
 
     // スコープ
