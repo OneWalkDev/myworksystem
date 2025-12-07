@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\AuthService;
+use App\Services\LogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -11,10 +12,12 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     protected AuthService $authService;
+    protected LogService $logService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, LogService $logService)
     {
         $this->authService = $authService;
+        $this->logService = $logService;
     }
 
     /**
@@ -34,6 +37,14 @@ class AuthController extends Controller
             $result = $this->authService->login(
                 $request->input('email'),
                 $request->input('password')
+            );
+
+            $this->logService->record(
+                $result['user']['id'],
+                'login',
+                'ログインしました',
+                [],
+                $request->ip()
             );
 
             return response()->json($result);
@@ -56,6 +67,8 @@ class AuthController extends Controller
     {
         $result = $this->authService->logout($request->user());
 
+        $this->logService->recordFromRequest($request, 'logout', 'ログアウトしました');
+
         return response()->json($result);
     }
 
@@ -68,6 +81,8 @@ class AuthController extends Controller
     public function logoutAll(Request $request): JsonResponse
     {
         $result = $this->authService->logoutAll($request->user());
+
+        $this->logService->recordFromRequest($request, 'logout_all', '全デバイスからログアウトしました');
 
         return response()->json($result);
     }

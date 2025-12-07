@@ -20,7 +20,7 @@ class UpdateSaleUseCase
      * @param int $userId authenticated user id
      * @return Sale
      */
-    public function execute(int $saleId, array $input): bool
+    public function execute(int $saleId, array $input): ?Sale
     {
 
         $payload = $input;

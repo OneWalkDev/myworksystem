@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCaseRequest;
 use App\Http\Requests\UpdateCaseRequest;
 use App\Services\ClientCaseService;
+use App\Services\LogService;
 use App\UseCases\Cases\StoreCaseUseCase;
 use App\UseCases\Cases\UpdateCaseUseCase;
 use Illuminate\Http\JsonResponse;
@@ -16,16 +17,19 @@ class ClientCaseController extends Controller
     protected ClientCaseService $service;
     protected StoreCaseUseCase $storeCaseUseCase;
     protected UpdateCaseUseCase $updateCaseUseCase;
+    protected LogService $logService;
 
     public function __construct(
         ClientCaseService $service,
         StoreCaseUseCase $storeCaseUseCase,
         UpdateCaseUseCase $updateCaseUseCase,
+        LogService $logService,
     )
     {
         $this->service = $service;
         $this->storeCaseUseCase = $storeCaseUseCase;
         $this->updateCaseUseCase = $updateCaseUseCase;
+        $this->logService = $logService;
     }
 
     public function index(Request $request): JsonResponse
@@ -68,6 +72,16 @@ class ClientCaseController extends Controller
 
             $case = $this->storeCaseUseCase->execute($validated, $request->user()->id);
 
+            $this->logService->recordFromRequest(
+                $request,
+                'case_created',
+                '案件を作成しました',
+                [
+                    'case_id' => $case->id,
+                    'name' => $case->name,
+                ]
+            );
+
             return response()->json([
                 'message' => 'Case created successfully',
                 'case' => $case,
@@ -100,6 +114,16 @@ class ClientCaseController extends Controller
                 ], 404);
             }
 
+            $this->logService->recordFromRequest(
+                $request,
+                'case_updated',
+                '案件を更新しました',
+                [
+                    'case_id' => $id,
+                    'name' => $validated['name'] ?? null,
+                ]
+            );
+
             return response()->json([
                 'message' => 'Case updated successfully',
             ]);
@@ -119,7 +143,7 @@ class ClientCaseController extends Controller
         }
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $success = $this->service->deleteCase($id);
 
@@ -128,6 +152,13 @@ class ClientCaseController extends Controller
                 'message' => 'Case not found',
             ], 404);
         }
+
+        $this->logService->recordFromRequest(
+            $request,
+            'case_deleted',
+            '案件を削除しました',
+            ['case_id' => $id]
+        );
 
         return response()->json([
             'message' => 'Case deleted successfully',

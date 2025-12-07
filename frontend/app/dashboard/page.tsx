@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/hooks/useAuth";
-import { CaseStatistics } from "@/app/types";
+import { ActivityLog, CaseStatistics } from "@/app/types";
 import { api } from "@/app/lib/api";
 import { AppHeader } from "@/app/components/layout/AppHeader";
 
@@ -14,11 +14,14 @@ export default function DashboardPage() {
     in_progress: 0,
     completed: 0,
   });
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [isLogLoading, setIsLogLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       fetchStatistics(token);
+      fetchLogs(token);
     }
   }, []);
 
@@ -28,6 +31,19 @@ export default function DashboardPage() {
       setStatistics(data);
     } catch (error) {
       console.error("Statistics fetch error:", error);
+    }
+  };
+
+  const fetchLogs = async (token: string) => {
+    try {
+      setIsLogLoading(true);
+      const data = await api.getRecentLogs(token, 5);
+      setLogs(data);
+    } catch (error) {
+      console.error("Log fetch error:", error);
+      setLogs([]);
+    } finally {
+      setIsLogLoading(false);
     }
   };
 
@@ -43,7 +59,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AppHeader title="ダッシュボード" onLogout={logout} />
+      <AppHeader onLogout={logout} />
 
       {/* メインコンテンツ */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -147,36 +163,31 @@ export default function DashboardPage() {
             最近のアクティビティ
           </h3>
           <div className="mt-4 space-y-4">
-            <div className="flex items-center border-b border-gray-200 pb-4 dark:border-gray-700">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  ログインしました
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  たった今
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center border-b border-gray-200 pb-4 dark:border-gray-700">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  プロフィールを更新しました
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  2時間前
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  新しいプロジェクトを作成しました
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  1日前
-                </p>
-              </div>
-            </div>
+            {isLogLoading ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                アクティビティを読み込み中...
+              </p>
+            ) : logs.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                まだアクティビティがありません。
+              </p>
+            ) : (
+              logs.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center border-b border-gray-200 pb-4 last:border-b-0 last:pb-0 dark:border-gray-700"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {log.description || log.action}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(log.created_at).toLocaleString("ja-JP")}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </main>

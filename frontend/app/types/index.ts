@@ -7,3 +7,6 @@ export type {
   ClientCaseInput,
   PaginatedCasesResponse,
 } from "./case";
+
+// ログ
+export type { ActivityLog } from "./log";

@@ -43,3 +43,47 @@ export interface PaginatedSalesResponse {
   total: number;
   per_page: number;
 }
+
+export interface CaseBreakdown {
+  case_id: number | null;
+  case_name: string;
+  total_amount: number;
+  sale_count: number;
+  ratio: number;
+}
+
+export interface MonthlySummary {
+  period: {
+    year: number;
+    month: number;
+    start_date: string;
+    end_date: string;
+  };
+  totals: {
+    amount: number;
+    tax_amount: number;
+    count: number;
+  };
+  case_breakdown: CaseBreakdown[];
+}
+
+export interface MonthlyTotal {
+  month: number;
+  total_amount: number;
+  sale_count: number;
+}
+
+export interface YearlySummary {
+  period: {
+    year: number;
+    start_date: string;
+    end_date: string;
+  };
+  totals: {
+    amount: number;
+    tax_amount: number;
+    count: number;
+  };
+  case_breakdown: CaseBreakdown[];
+  monthly_totals: MonthlyTotal[];
+}

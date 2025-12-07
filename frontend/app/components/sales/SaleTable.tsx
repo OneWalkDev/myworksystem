@@ -141,6 +141,9 @@ export function SaleTable({
                 入金
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                支払済
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                 操作
               </th>
             </tr>
@@ -174,7 +177,10 @@ export function SaleTable({
                     {formatDate(saleItem.payment_due_date)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                    {formatDate(saleItem.payment_due_date)}
+                    {formatDate(saleItem.payment_date)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                    {saleItem.is_paid ? "はい": "いいえ"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     <Link

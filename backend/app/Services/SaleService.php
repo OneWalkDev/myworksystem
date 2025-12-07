@@ -39,8 +39,18 @@ class SaleService
         return $this->repository->create($data);
     }
 
-    public function updateSale(int $id, array $data): bool{
+    public function updateSale(int $id, array $data): ?Sale{
         return $this->repository->update($id, $data);
+    }
+
+    public function getMonthlySummary(int $userId, int $year, int $month): array
+    {
+        return $this->repository->getMonthlySummary($userId, $year, $month);
+    }
+
+    public function getYearlySummary(int $userId, int $year): array
+    {
+        return $this->repository->getYearlySummary($userId, $year);
     }
 
 }

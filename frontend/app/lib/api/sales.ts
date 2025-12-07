@@ -1,4 +1,10 @@
-import { PaginatedSalesResponse, Sales, SaleInput } from "@/app/types/sale";
+import {
+  MonthlySummary,
+  PaginatedSalesResponse,
+  Sales,
+  SaleInput,
+  YearlySummary,
+} from "@/app/types/sale";
 import { apiClient } from "./client";
 
 interface SaleSearchParams {
@@ -49,5 +55,34 @@ export const salesApi = {
 
   async deleteSale(token: string, id: number): Promise<void> {
     return apiClient.delete<void>(`/sales/${id}`, token);
+  },
+
+  async getMonthlySummary(
+    token: string,
+    params: { year: number; month: number }
+  ): Promise<MonthlySummary> {
+    const queryParams = new URLSearchParams({
+      year: params.year.toString(),
+      month: params.month.toString(),
+    });
+
+    return apiClient.get<MonthlySummary>(
+      `/sales/summary/monthly?${queryParams.toString()}`,
+      token
+    );
+  },
+
+  async getYearlySummary(
+    token: string,
+    params: { year: number }
+  ): Promise<YearlySummary> {
+    const queryParams = new URLSearchParams({
+      year: params.year.toString(),
+    });
+
+    return apiClient.get<YearlySummary>(
+      `/sales/summary/yearly?${queryParams.toString()}`,
+      token
+    );
   },
 };

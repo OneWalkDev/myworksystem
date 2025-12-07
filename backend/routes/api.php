@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ClientCaseController;
 use App\Http\Controllers\Api\Master\CasePriorityController;
 use App\Http\Controllers\Api\Master\CaseStatusController;
 use App\Http\Controllers\Api\Master\PaymentTypeController;
+use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\SaleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -65,5 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('cases', ClientCaseController::class);
 
     // 売上管理
+    Route::get('/sales/summary/monthly', [SaleController::class, 'monthlySummary']);
+    Route::get('/sales/summary/yearly', [SaleController::class, 'yearlySummary']);
     Route::apiResource('sales', SaleController::class);
+
+    // ログ
+    Route::get('/logs/recent', [LogController::class, 'recent']);
 });

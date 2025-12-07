@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface AppHeaderProps {
   onLogout: () => void;
@@ -20,16 +20,23 @@ export function AppHeader({ onLogout }: AppHeaderProps) {
   const navItems = [
     { name: "ダッシュボード", href: "/dashboard" },
     { name: "案件一覧", href: "/cases" },
-    { name: "売上一覧", href: "/sales"}
+    { name: "売上一覧", href: "/sales"},
+    { name: "売上集計", href: "/sales/summary"},
   ];
 
-  const isActive = (href: string) => {
-    if (!mounted) return false;
-    if (href === "/cases") {
-      return pathname === "/cases";
-    }
-    return pathname?.startsWith(href);
-  };
+  const activeHref = useMemo(() => {
+    if (!mounted || !pathname) return null;
+    return (
+      [...navItems]
+        .sort((a, b) => b.href.length - a.href.length)
+        .find(
+          (item) =>
+            pathname === item.href || pathname.startsWith(`${item.href}/`)
+        )?.href ?? null
+    );
+  }, [mounted, pathname, navItems]);
+
+  const isActive = (href: string) => activeHref === href;
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
